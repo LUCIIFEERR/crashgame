@@ -1,0 +1,100 @@
+{
+	"info": {
+		"name": "Crypto Crash Game API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Game",
+			"item": [
+				{
+					"name": "Place Bet",
+					"request": {
+						"method": "POST",
+						"url": "http://localhost:3000/api/game/bet",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"playerId\": \"player1\",\n    \"amount\": 10,\n    \"cryptoCurrency\": \"bitcoin\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Cash Out",
+					"request": {
+						"method": "POST",
+						"url": "http://localhost:3000/api/game/cashout",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"playerId\": \"player1\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Game History",
+					"request": {
+						"method": "GET",
+						"url": "http://localhost:3000/api/game/history",
+						"query": [
+							{
+								"key": "limit",
+								"value": "50"
+							},
+							{
+								"key": "offset",
+								"value": "0"
+							}
+						]
+					}
+				},
+				{
+					"name": "Current Game",
+					"request": {
+						"method": "GET",
+						"url": "http://localhost:3000/api/game/current"
+					}
+				}
+			]
+		},
+		{
+			"name": "Wallet",
+			"item": [
+				{
+					"name": "Get Balance",
+					"request": {
+						"method": "GET",
+						"url": "http://localhost:3000/api/wallet/balance/player1"
+					}
+				},
+				{
+					"name": "Get Transactions",
+					"request": {
+						"method": "GET",
+						"url": "http://localhost:3000/api/wallet/transactions/player1",
+						"query": [
+							{
+								"key": "limit",
+								"value": "50"
+							},
+							{
+								"key": "offset",
+								"value": "0"
+							}
+						]
+					}
+				}
+			]
+		}
+	]
+}

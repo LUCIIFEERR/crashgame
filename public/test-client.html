@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Crash - Test Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .game-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .multiplier {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .log {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Crash - Test Client</h1>
+    
+    <div class="game-container">
+        <div class="multiplier">Multiplier: <span id="current-multiplier">1.00x</span></div>
+        <div class="controls">
+            <input type="text" id="player-id" placeholder="Player ID" value="test-player">
+            <input type="number" id="bet-amount" placeholder="Bet amount (USD)" value="10">
+            <select id="crypto-currency">
+                <option value="bitcoin">BTC</option>
+                <option value="ethereum">ETH</option>
+            </select>
+            <button id="place-bet">Place Bet</button>
+            <button id="cashout" disabled>Cash Out</button>
+        </div>
+    </div>
+
+    <div class="log" id="event-log"></div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+        const log = document.getElementById('event-log');
+        const multiplierDisplay = document.getElementById('current-multiplier');
+        const placeBetBtn = document.getElementById('place-bet');
+        const cashoutBtn = document.getElementById('cashout');
+        
+        function addLog(message) {
+            const div = document.createElement('div');
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        ws.onopen = () => {
+            addLog('Connected to server');
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            switch (data.event) {
+                case 'gameStart':
+                    addLog(`New round starting: ${data.data.roundId}`);
+                    placeBetBtn.disabled = false;
+                    cashoutBtn.disabled = true;
+                    break;
+
+                case 'multiplierUpdate':
+                    multiplierDisplay.textContent = `${data.data.multiplier}x`;
+                    break;
+
+                case 'gameCrash':
+                    addLog(`Game crashed at ${data.data.crashPoint}x`);
+                    placeBetBtn.disabled = true;
+                    cashoutBtn.disabled = true;
+                    break;
+
+                case 'playerCashout':
+                    addLog(`Player ${data.data.playerId} cashed out at ${data.data.multiplier}x (${data.data.winningsUsd} USD)`);
+                    break;
+
+                case 'betPlaced':
+                    addLog(`Bet placed: ${data.data.cryptoAmount} crypto`);
+                    placeBetBtn.disabled = true;
+                    cashoutBtn.disabled = false;
+                    break;
+
+                case 'cashoutSuccess':
+                    addLog(`Cashed out: ${data.data.winningsUsd} USD`);
+                    cashoutBtn.disabled = true;
+                    break;
+
+                case 'error':
+                    addLog(`Error: ${data.data.message}`);
+                    break;
+            }
+        };
+
+        placeBetBtn.onclick = () => {
+            const playerId = document.getElementById('player-id').value;
+            const amount = parseFloat(document.getElementById('bet-amount').value);
+            const cryptoCurrency = document.getElementById('crypto-currency').value;
+
+            ws.send(JSON.stringify({
+                event: 'placeBet',
+                playerId,
+                amount,
+                cryptoCurrency
+            }));
+        };
+
+        cashoutBtn.onclick = () => {
+            const playerId = document.getElementById('player-id').value;
+            
+            ws.send(JSON.stringify({
+                event: 'cashout',
+                playerId
+            }));
+        };
+
+        ws.onclose = () => {
+            addLog('Disconnected from server');
+        };
+
+        ws.onerror = (error) => {
+            addLog(`WebSocket error: ${error.message}`);
+        };
+    </script>
+</body>
+</html>
